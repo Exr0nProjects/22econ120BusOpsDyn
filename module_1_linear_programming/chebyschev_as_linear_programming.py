@@ -28,11 +28,15 @@ def convert_convex_objective(c, c_b, A_ub, b_ub, A_eq, b_eq, bounds=[], x_0=None
 
     # minimize z subject to z.broadcast() <= (c @ x + c_b), A_eq @ x = b_eq, A_ub @ x <= b_ub
     # lets tack on z to the end
-    neo_c = np.array([[0]*c.shape[0] + 1])
-    neo_A_ub = np.concatenate((A_ub, np.array([0] * A_ub.shape[1])), axis=1)    # need vertical concat for the maximize constraints
+    neo_c = np.array([[0]*c.shape[0] + [1]])
+    # neo_A_ub = np.concatenate((A_ub, np.array([0] * A_ub.shape[1])), axis=1)    # need vertical concat for the maximize constraints
+    neo_A_ub = np.zeros([A_ub.shape[0] + c.shape[0], A_ub.shape[1] + 1])
+    neo_A_ub[:A_ub.shape[0], :A_ub.shape[1]] = A_ub
 
-    print('c', c, neo_c)
-    print('A_ub', A_ub, neo_A_ub)
+    neo_b_ub = # TODO
+
+    print('\n\nc\n', c, '\n\n', neo_c)
+    print('\n\nA_ub\n', A_ub, '\n\n', neo_A_ub)
 
     return
 
@@ -42,4 +46,14 @@ def convert_convex_objective(c, c_b, A_ub, b_ub, A_eq, b_eq, bounds=[], x_0=None
         return linprog(neo_c, neo_A_ub, neo_b_ub, A_eq, b_eq, bounds)
 
 if __name__ == '__main__':
-    convert_convex_objective()
+    A_ub = np.array([[-1,  0],
+                     [ 0, -1],
+                     [ 1,  1]])
+    b_ub = np.array([0, 0, 2])
+
+    c = np.array([[1, 0],
+                  [0, 1],
+                  [9, 9]])
+    c_b = np.array([0, 0, 0])
+
+    convert_convex_objective(c, c_b, A_ub, b_ub, np.array([[]]), np.array([[]]))
