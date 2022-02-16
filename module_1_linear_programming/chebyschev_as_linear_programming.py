@@ -58,14 +58,16 @@ def convert_convex_objective(c, c_b, A_ub, b_ub, A_eq, b_eq, bounds=[], x_0=None
 if __name__ == '__main__':
     A_ub = np.array([[-1,  0],
                      [ 0, -1],
-                     [ 1,  1]])
-    b_ub = np.array([0, 0, 2])
+                     [ 0,  1],
+                     [ 1,  0]])
+    b_ub = np.array([0, 0, 1, 1])
 
     # get the minumum of this matrix as the objective fn, then maximize it
     c = np.array([[1, 0],
                   [0, 1],
-                  [-sqrt(2), -sqrt(2)]])
-    c_b = np.array([0, 0, 2*sqrt(2)])
+                  [-1, 0],
+                  [0, -1]])
+    c_b = np.array([0, 0, 2, 3])
 
     got = convert_convex_objective(c, c_b, A_ub, b_ub, np.array([[0]*c.shape[1]]), np.array([]))
     print(got)
