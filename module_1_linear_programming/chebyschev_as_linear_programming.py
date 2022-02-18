@@ -28,16 +28,16 @@ def convert_convex_objective(c, c_b, A_ub, b_ub, A_eq, b_eq, bounds=[], x_0=None
     # assert c.shape[0] == c_b.shape[0]
     # assert x_0.shape[1] == c_b.shape[1]
 
-    # minimize z subject to z.broadcast() <= (c @ x + c_b), A_eq @ x = b_eq, A_ub @ x <= b_ub
+    # maximize z subject to z.broadcast() <= (c @ x + c_b), A_eq @ x = b_eq, A_ub @ x <= b_ub
     # lets tack on z to the end
-    neo_c = np.array([[0]*c.shape[1] + [1]])
+    neo_c = np.array([[0]*c.shape[1] + [-1]])
     # neo_A_ub = np.concatenate((A_ub, np.array([0] * A_ub.shape[1])), axis=1)    # need vertical concat for the maximize constraints
     neo_A_ub = np.zeros([A_ub.shape[0] + c.shape[0], A_ub.shape[1] + 1])
     neo_A_ub[:A_ub.shape[0], :A_ub.shape[1]] = A_ub
-    neo_A_ub[A_ub.shape[0]:, :A_ub.shape[1]] = c
-    neo_A_ub[A_ub.shape[0]:, -1] = [-1] * c.shape[0]
+    neo_A_ub[A_ub.shape[0]:, :A_ub.shape[1]] = -c
+    neo_A_ub[A_ub.shape[0]:, -1] = [1] * c.shape[0]
 
-    neo_b_ub = np.expand_dims(np.concatenate([b_ub, -c_b]), 0)
+    neo_b_ub = np.expand_dims(np.concatenate([b_ub, c_b]), 0)
 
     print('\n\nc\n', c, '\n\n', neo_c)
     print('\n\nA_ub\n', A_ub, '\n\n', neo_A_ub)
@@ -60,7 +60,7 @@ if __name__ == '__main__':
                      [ 0, -1],
                      [ 0,  1],
                      [ 1,  0]])
-    b_ub = np.array([0, 0, 1, 1])
+    b_ub = np.array([0, 0, 3, 2])
 
     # get the minumum of this matrix as the objective fn, then maximize it
     c = np.array([[1, 0],
