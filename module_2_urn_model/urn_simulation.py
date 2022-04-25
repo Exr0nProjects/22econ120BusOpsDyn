@@ -24,8 +24,8 @@ if __name__ == '__main__':
     linspace = np.linspace(1, cap, num=num)
     sims = []
     for u in tqdm(range(NUM_URNS)):
-        s = sim_urn(steps=cap, save_steps=[int(x) for x in linspace])
-        sims.append([a/(a+b) for a, b in s])
+        s = sim_urn(steps=cap, n_stones=2, add=5, save_steps=[int(x) for x in linspace])
+        sims.append([[x/sum(row) for x in row] for row in s])
 
     sims = np.array(sims).T
     print(sims)
@@ -33,7 +33,9 @@ if __name__ == '__main__':
     linspace = np.linspace(1, cap, num=num)
     for steps, row in zip(linspace, sims):
         plt.title(f"n steps = {int(steps) + 1}")
-        plt.hist(row)
+        for c, r in enumerate(row):
+            plt.hist(row, opacity=0.5, label=f"color {c+1}")
+        plt.legend()
         plt.show()
 
     # weirdly, it seems like the distribution stays uniform, even though it diverges in the limit
