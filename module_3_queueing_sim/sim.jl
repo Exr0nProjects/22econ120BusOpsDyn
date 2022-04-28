@@ -17,25 +17,27 @@ function simulate(n_customers)
 
     Random.seed!(SEED)
     println("sampling...")
-    samples_arrive = rand(Exponential(lambda_arrive), n_customers)
-    samples_checko = rand(Exponential(lambda_checko), n_customers)
+    samples_arrive = rand(Exponential(lambda_arrive), n_customers)  # delta T
+    samples_checko = rand(Exponential(lambda_checko), n_customers)  # U_k
 
     println(round.(samples_arrive, digits=1))
     println(round.(samples_checko, digits=1))
 
 # samples_arrive, samples_checko = floor.(samples_arrive), floor.(samples_checko)
 
-    samples_arrive  = cumsum(samples_arrive)
-    wait_cumsum = zeros(n_customers + 1)
-    wait_cumsum[2:] = cumsum(samples_checko)
+    samples_arrive  = cumsum(samples_arrive)                        # T_k
+    # wait_cumsum = zeros(n_customers + 1)
+    # wait_cumsum[2:end] = cumsum(samples_checko)                     # leaving time
 
     events = PriorityQueue()
     for (i, t) in enumerate(samples_arrive)
         enqueue!(events, t=>("arrived", i))
     end 
 
-    line_len = 0
     len_on_enter = zeros(Int, n_customers)
+
+    queue = []
+    wait_time_by_customer = zeros(n_customers)
 
     # event loop
     while length(events) > 0
@@ -44,12 +46,38 @@ function simulate(n_customers)
         @match ev begin
             "arrived" => (  enqueue!(events, t + 15 => ("queued", id))
                         )
-            "queued"  => (  len_on_enter[id] = line_len;
-                            println("    with $line_len people in line");
-                            println("    waiting $(wait_cumsum[id] - wait_cumsum[id - line_len])");
-                            wait_time = wait_cumsum[id] - wait_cumsum[id-line_len];
-                            enqueue!(events, t + wait_time + samples_checko[id] => ("dequeued", id));
-                         line_len += 1; )
+            "queued"  => (  len_on_enter[id] = length(queue);
+                            # len_on_enter[id] = line_len;
+                            println("    with $(length(queue)) people in line");
+                            wait_time_by_customer[id] = t;
+
+                            push!(queue, id);
+                            if length(queue) == 0
+                                enqueue!(events, t => ("dequeued", id))
+                            end
+
+                            # if length(queue) > 0
+                            #     push!(queue, id);
+                            # else
+                            #     enqueue!(events, t => ("dequeued", id))
+                            # end 
+
+
+                            # println("    waiting $(wait_cumsum[id] - t)");
+                            # wait_time = wait_cumsum[id] - t;
+                            # enqueue!(events, t + wait_time + samples_checko[id] => ("dequeued", id));
+                            # line_len += 1;
+                        )
+            "dequeued" => ( wait_time_by_customer[id] = t-wait_time_by_customer[id];
+                            @assert id == popfirst!(queue);
+                            enqueue!(events, t + samples_checko
+                                                 => ("done_serving", id))
+                    )
+            "done_serving" => (
+                            if length(queue) > 0
+                                enqueue!(events, t => ("dequeued", queue[1]))
+                            end 
+                    )
             unk => println("- unknown event $unk")
         end
     end
