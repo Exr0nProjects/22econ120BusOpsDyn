@@ -25,16 +25,18 @@ THEORETICAL_DISTRIBUTIONS = [
 
 if __name__ == '__main__':
     with open('queue_times.csv', 'r') as rf:
-        for theory_dist, (customer_n, line) in zip(THEORETICAL_DISTRIBUTIONS, enumerate(rf)):
+        # for theory_dist, (customer_n, line) in zip(THEORETICAL_DISTRIBUTIONS, enumerate(rf)):
+        for customer_n, line in enumerate(rf):
             wait_times = [float(x) for x in line.split(',')]
 
 
             # plot stuff
             fig, ax = plt.subplots()
+            ax.set_xlim([0, 150])
             ax.hist(wait_times, bins=100)
 
             # overlay predicted distribution
-            add_fn_plot(ax, theory_dist, [0, max(tqdm(wait_times, desc='normalizing...', leave=False))])
+            # add_fn_plot(ax, theory_dist, [0, max(tqdm(wait_times, desc='normalizing...', leave=False))])
 
             # label and show
             ax.set_title(f'distribution of wait times for customer {customer_n+1}')
